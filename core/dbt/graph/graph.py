@@ -76,7 +76,7 @@ class Graph:
 
         while (
             True
-        ):  # remove nodes that have 0 or 1 degree and are not in include_nodes then repeat
+        ):
 
             nodes_to_remove = list(
                 node
