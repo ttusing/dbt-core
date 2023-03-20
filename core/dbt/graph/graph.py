@@ -74,7 +74,22 @@ class Graph:
         new_graph = self.graph.copy()
         include_nodes = set(selected)
 
-        for node in self:
+        while (
+            True
+        ):  # remove nodes that have 0 or 1 degree and are not in include_nodes then repeat
+
+            nodes_to_remove = list(
+                node
+                for node in new_graph
+                if node not in include_nodes and new_graph.degree(node) < 2
+            )
+            if not nodes_to_remove:
+                break
+            new_graph.remove_nodes_from(nodes_to_remove)
+
+        remaining_nodes = set(new_graph.nodes())
+
+        for node in remaining_nodes:
             if node not in include_nodes:
                 source_nodes = [x for x, _ in new_graph.in_edges(node)]
                 target_nodes = [x for _, x in new_graph.out_edges(node)]
