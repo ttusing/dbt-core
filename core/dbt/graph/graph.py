@@ -74,9 +74,7 @@ class Graph:
         new_graph = self.graph.copy()
         include_nodes = set(selected)
 
-        while (
-            True
-        ):
+        while True:
 
             nodes_to_remove = list(
                 node
@@ -87,7 +85,9 @@ class Graph:
                 break
             new_graph.remove_nodes_from(nodes_to_remove)
 
-        remaining_nodes = set(new_graph.nodes())
+        # sort remaining nodes by degree
+        remaining_nodes = list(new_graph.nodes())
+        remaining_nodes.sort(key=lambda node: new_graph.degree(node))
 
         for node in remaining_nodes:
             if node not in include_nodes:
