@@ -74,23 +74,22 @@ class Graph:
         new_graph = self.graph.copy()
         include_nodes = set(selected)
 
-        while True:
-
-            nodes_to_remove = list(
-                node
-                for node in new_graph
-                if node not in include_nodes and new_graph.degree(node) < 2
+        def is_trivial_node(node) -> bool:
+            return (
+                min(new_graph.in_degree(node), new_graph.out_degree(node)) < 1
+                and node not in include_nodes
             )
-            if not nodes_to_remove:
-                break
-            new_graph.remove_nodes_from(nodes_to_remove)
 
-        # sort remaining nodes by degree
-        remaining_nodes = list(new_graph.nodes())
-        remaining_nodes.sort(key=lambda node: new_graph.degree(node))
+        def trim_trivial_nodes():
+            while True:
+                nodes_to_remove = set(node for node in new_graph if is_trivial_node(node))
+                if not nodes_to_remove:
+                    return
+                new_graph.remove_nodes_from(nodes_to_remove)
 
-        for node in remaining_nodes:
-            if node not in include_nodes:
+        def prune_nodes(nodes_to_prune):
+            nodes_to_prune.sort(key=lambda node: new_graph.degree(node))
+            for node in nodes_to_prune:
                 source_nodes = [x for x, _ in new_graph.in_edges(node)]
                 target_nodes = [x for _, x in new_graph.out_edges(node)]
 
@@ -101,6 +100,28 @@ class Graph:
 
                 new_graph.add_edges_from(non_cyclic_new_edges)
                 new_graph.remove_node(node)
+
+        # start by trimming trivial nodes from the graph
+        trim_trivial_nodes()
+
+        # sort remaining nodes by degree
+        remaining_prunable_nodes = list(set(new_graph.nodes()) - set(include_nodes))
+
+        # take a chunk of the lowest degree nodes if the list isn't empty and prune them
+        while remaining_prunable_nodes:
+            remaining_prunable_nodes.sort(key=lambda node: new_graph.degree(node))
+            # prune a chunk of the lowest degree nodes. chunk size should be big enough to not
+            # have to re-sort so often, but small enough to get value from switching to pruning to
+            # removing new trivial nodes
+            chunk_size = min(
+                100,
+                len(remaining_prunable_nodes),
+            )
+            nodes_to_prune = remaining_prunable_nodes[:chunk_size]
+            prune_nodes(nodes_to_prune)
+            # trim trivial nodes from the graph
+            trim_trivial_nodes()
+            remaining_prunable_nodes = list(set(new_graph.nodes()) - set(include_nodes))
 
         for node in include_nodes:
             if node not in new_graph:
