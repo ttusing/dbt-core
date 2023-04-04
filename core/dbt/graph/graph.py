@@ -74,7 +74,12 @@ class Graph:
         new_graph = self.graph.copy()
         include_nodes = set(selected)
 
-        for node in self:
+        remaining_nodes = list(new_graph.nodes())
+        remaining_nodes.sort(
+            key=lambda node: new_graph.in_degree(node) * new_graph.out_degree(node)
+        )
+
+        for node in remaining_nodes:
             if node not in include_nodes:
                 source_nodes = [x for x, _ in new_graph.in_edges(node)]
                 target_nodes = [x for _, x in new_graph.out_edges(node)]
