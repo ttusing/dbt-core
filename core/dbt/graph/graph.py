@@ -75,16 +75,21 @@ class Graph:
         include_nodes = set(selected)
 
         still_removing = True
+        node_superset = set(new_graph.nodes())
         while still_removing:
-            nodes_to_remove = list(
+            nodes_to_remove = set(
                 node
-                for node in new_graph
+                for node in node_superset
                 if node not in include_nodes
-                and (new_graph.in_degree(node) * new_graph.out_degree(node)) == 0
+                and (new_graph.in_degree(node) == 0 or new_graph.out_degree(node) == 0)
             )
             if len(nodes_to_remove) == 0:
                 still_removing = False
             else:
+                # set node_superset to the nodes that are neighbors of nodes_to_remove
+                node_superset = set(
+                    new_graph.predecessors(nodes_to_remove) | new_graph.successors(nodes_to_remove)
+                )
                 new_graph.remove_nodes_from(nodes_to_remove)
 
         # sort remaining nodes by degree
